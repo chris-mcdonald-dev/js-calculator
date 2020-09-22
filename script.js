@@ -39,6 +39,11 @@ class Calculator {
     chooseOperation(operation) {
         if (this.currentOperand === '') return
         if (operation == '/') operation = '÷'
+        if (this.equalsButtonPressed == true) {
+            this.previousOperand = this.currentOperandTextElement.innerText
+            this.keepTotal = true
+            this.equalsButtonPressed = false
+        }
         if (this.previousOperand !== '') {
             this.compute()
         }
@@ -51,12 +56,17 @@ class Calculator {
     compute() {
         let computation
         const prev = parseFloat(this.previousOperand)
-        const current = parseFloat(this.currentOperand)
+        let current
+        if (this.currentOperand != '') {
+            current = parseFloat(this.currentOperand)
+        }
         if (isNaN(prev) || (isNaN(current) && this.operationCounter < 2)) {
-            console.log('I RETURNED')
             return
         }
         switch (true) {
+            case (isNaN(current) == true):
+                computation = prev
+                break
             case (this.operation == '+'):
                 computation = prev + current
                 break
@@ -69,9 +79,6 @@ class Calculator {
             case (this.operation == '÷'):
                 computation = prev / current
                 break
-            case (isNaN(currentOperandTextElement) == true):
-                computation = prev
-                console.log('computation')
             default:
                 return
         }
@@ -86,6 +93,11 @@ class Calculator {
         } else {
             this.prev.push(current) 
         }
+        // Gets rid of any accidental "undefined" properties
+        this.prev = this.prev.filter(function (el) {
+            return el != null
+        })
+        console.log('testtupewi', this.prev)
     }
 
     getDisplayNumber(number) {
@@ -117,6 +129,18 @@ class Calculator {
                 totalArray.push(this.prev[i])
                 totalArray.push(this.operationArray[i])
             }
+            // // Removes any NaNs or undefined entries before joining array
+            totalArray = totalArray.filter(function (el) {
+                return el != null
+            })
+            let lastElement = totalArray[totalArray.length - 1]
+            if (this.operationArray.includes(lastElement)) {
+                totalArray.splice(-1, 1)
+            }
+            // // Removes any NaNs or undefined entries after removing last element
+            totalArray = totalArray.filter(function (el) {
+                return el != null
+            })
             this.previousOperandTextElement.innerText = totalArray.join(' ') + ' ='
         }
     }
@@ -124,12 +148,24 @@ class Calculator {
     // This method adds keyboard functionality
     keyboardAppend(e) {
         this.keyPress = e.key
-        if (isNaN(this.keyPress) == false) {
-            this.keyPress = parseInt(this.keyPress)
-        }
-
+        console.log(this.keyPress)
         switch (true) {
-            case (typeof this.keyPress == 'number'):
+            case (this.keyPress == 'Escape'):
+                this.clear()
+                this.updateDisplay()
+                this.secondaryClear()
+                break
+            case (this.keyPress == 'Backspace'):
+                calculator.delete()
+                calculator.updateDisplay()
+                break
+            case (isNaN(parseInt(this.keyPress)) == false):
+                console.log(this.keyPress)
+                this.keyPress = parseInt(this.keyPress)
+                this.appendNumber(this.keyPress)
+                this.updateDisplay()
+                break
+            
             case (this.keyPress == '.'):
                 this.appendNumber(this.keyPress)
                 this.updateDisplay()
@@ -149,6 +185,11 @@ class Calculator {
                 }
                 this.compute()
                 this.updateDisplay()
+                break
+            
+            case (this.keyPress == 'backspace'):
+                calculator.delete()
+                calculator.updateDisplay()
                 break
             
             default:
