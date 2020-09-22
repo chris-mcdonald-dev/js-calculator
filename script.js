@@ -38,6 +38,7 @@ class Calculator {
 
     chooseOperation(operation) {
         if (this.currentOperand === '') return
+        if (operation == '/') operation = '÷'
         if (this.previousOperand !== '') {
             this.compute()
         }
@@ -51,20 +52,26 @@ class Calculator {
         let computation
         const prev = parseFloat(this.previousOperand)
         const current = parseFloat(this.currentOperand)
-        if (isNaN(prev) || isNaN(current)) return
-        switch (this.operation) {
-            case '+':
+        if (isNaN(prev) || (isNaN(current) && this.operationCounter < 2)) {
+            console.log('I RETURNED')
+            return
+        }
+        switch (true) {
+            case (this.operation == '+'):
                 computation = prev + current
                 break
-            case '-':
+            case (this.operation == '-'):
                 computation = prev - current
                 break
-            case '*':
+            case (this.operation == '*'):
                 computation = prev * current
                 break
-            case '÷':
+            case (this.operation == '÷'):
                 computation = prev / current
                 break
+            case (isNaN(currentOperandTextElement) == true):
+                computation = prev
+                console.log('computation')
             default:
                 return
         }
@@ -77,7 +84,7 @@ class Calculator {
         if (this.operationCounter < 2) {
             this.prev.push(prev, current)
         } else {
-            this.prev.push(current)
+            this.prev.push(current) 
         }
     }
 
@@ -113,6 +120,42 @@ class Calculator {
             this.previousOperandTextElement.innerText = totalArray.join(' ') + ' ='
         }
     }
+
+    // This method adds keyboard functionality
+    keyboardAppend(e) {
+        this.keyPress = e.key
+        if (isNaN(this.keyPress) == false) {
+            this.keyPress = parseInt(this.keyPress)
+        }
+
+        switch (true) {
+            case (typeof this.keyPress == 'number'):
+            case (this.keyPress == '.'):
+                this.appendNumber(this.keyPress)
+                this.updateDisplay()
+                break
+            
+            case (this.keyPress == '+'):
+            case (this.keyPress == '-'):
+            case (this.keyPress == '*'):
+            case (this.keyPress == '/'):
+                this.chooseOperation(this.keyPress)
+                this.updateDisplay()
+                break
+            
+            case (this.keyPress == '='):
+                if ((this.operationCounter > 0 && this.currentOperand != '') || this.operationCounter > 2) {
+                    this.equalsButtonPressed = true
+                }
+                this.compute()
+                this.updateDisplay()
+                break
+            
+            default:
+                return
+                break
+        }
+    }
 }
 
 const numberButtons = document.querySelectorAll('[data-number]')
@@ -122,8 +165,10 @@ const deleteButton = document.querySelector('[data-delete]')
 const allClearButton = document.querySelector('[data-all-clear]')
 const previousOperandTextElement = document.querySelector('[data-previous-operand]')
 const currentOperandTextElement = document.querySelector('[data-current-operand]')
+const calculatorKeyboard = document.querySelector('calculator-grid')
 
 const calculator = new Calculator(previousOperandTextElement, currentOperandTextElement)
+
 
 numberButtons.forEach(button => {
     button.addEventListener('click', () => {
@@ -155,4 +200,9 @@ allClearButton.addEventListener('click', button => {
 deleteButton.addEventListener('click', button => {
     calculator.delete()
     calculator.updateDisplay()
+})
+
+// This is the keyboard listener that accepts keyboard input
+window.addEventListener('keydown', e => {
+    calculator.keyboardAppend(e)
 })
